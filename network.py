@@ -4,6 +4,7 @@ import random
 import numpy as np
 import math
 
+
 class Layer:
     def __init__(self, in_c, node_c):
         # print("{}, {}".format(in_c, node_c))
@@ -30,6 +31,7 @@ class Layer:
     def __repr__(self):
         return "{}".format(self.m)
 
+
 class Network:
     def __init__(self, layers):
         self.layers = []
@@ -53,6 +55,12 @@ class Network:
         r = Network([0])
         r.layers = [Layer.mate(a, b) for a, b in zip(n1.layers, n2.layers)]
         return r
+
+    def __str__(self):
+         return '; '.join([str(l) for l in layers])
+
+    def __repr__(self):
+        return str(self)
 
 
 if __name__ == '__main__':
