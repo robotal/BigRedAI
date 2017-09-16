@@ -1,6 +1,4 @@
 from network import Network
-import numpy as np
-import copy
 import itertools
 
 
@@ -38,8 +36,10 @@ class FixedTrainer:
 
         fitnessList.sort(key=lambda x: x[1])
 
-        self.nets =  [x[0] for x in fitnessList[0:self.n]]
-        self.nets += [Network.mate(a, b) for a, b in itertools.combinations(self.nets, 2)]
-        self.nets += [Network.mutate(a, sigma, mutationProb) for a in self.nets]
+        self.nets = [x[0] for x in fitnessList[0:self.n]]
+        self.nets += [Network.mate(a, b) for a, b in
+                      itertools.combinations(self.nets, 2)]
+        self.nets += [Network.mutate(a, sigma, mutationProb)
+                      for a in self.nets]
 
         return fitnessList[0][1]
