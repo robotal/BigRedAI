@@ -1,11 +1,12 @@
 from network import Network
 import numpy as np
 import copy
+import itertools
 
 
 class FixedTrainer:
 
-    def __init__(self, inputs, expected, layers):
+    def __init__(self, n, inputs, expected, layers):
 
         # create a neural net with 2 inputs, 1 output, and a hidden layer
         # with 2 nodes
@@ -13,8 +14,9 @@ class FixedTrainer:
         self.generation = 0
         self.inputs = inputs
         self.expected = expected
+        self.n = n
 
-        for i in range(0, 12):
+        for i in range(0, 2*n + n*(n-1)):
             self.nets.append(Network(layers))
 
     def getGeneration(self):
@@ -36,30 +38,8 @@ class FixedTrainer:
 
         fitnessList.sort(key=lambda x: x[1])
 
-        print (fitnessList[0][1])
+        self.nets =  [x[0] for x in fitnessList[0:self.n]]
+        self.nets += [Network.mate(a, b) for a, b in itertools.combinations(self.nets, 2)]
+        self.nets += [Network.mutate(a, sigma, mutationProb) for a in self.nets]
 
-        first = fitnessList[0][0]
-        second = fitnessList[1][0]
-        third = fitnessList[2][0]
-        self.nets = [first, second, third]
-        self.nets.append(Network.mate(first, second))
-        self.nets.append(Network.mate(third, second))
-        self.nets.append(Network.mate(first, third))
-
-        for i in range(0, 6):
-            netcopy = copy.deepcopy(self.nets[i])
-            netcopy.mutate(sigma, mutationProb)
-            self.nets.append(netcopy)
-
-
-if __name__ == "__main__":
-    geneticXor = XORTrainer()
-
-    for i in range(0, 1000):
-        geneticXor.nextGeneration()
-
-    print(geneticXor.nets[0])
-    print(geneticXor.nets[0].apply(np.array([0, 0])))
-    print(geneticXor.nets[0].apply(np.array([1, 0])))
-    print(geneticXor.nets[0].apply(np.array([0, 1])))
-    print(geneticXor.nets[0].apply(np.array([1, 1])))
+        return fitnessList[0][1]

@@ -16,14 +16,15 @@ class Layer:
                 return 1 / (1 + math.exp(-x))
             except:
                 return 0
-        self.sigmoid = np.vectorize(lambda x: 1 / (1 + math.exp(-x)))
+        self.sigmoid = np.vectorize(safe_sigmoid)
 
     def apply(self, input):
         # print("Matrix: {}\nInput: {}".format(self.m, input))
         return self.sigmoid(self.m.dot(input))
 
     def mutate(self, sigma, mutationProb):
-        self.m += np.random.normal(loc=0.0, scale=sigma, size=self.m.shape)
+        r = Layer(1, 1)
+        r.m = self.m + np.random.normal(loc=0.0, scale=sigma, size=self.m.shape)
 
         def randomChange(x):
             if random.uniform(0, 1) < mutationProb:
@@ -32,7 +33,8 @@ class Layer:
                 return x
 
         randomlyChange = np.vectorize(randomChange)
-        self.m = randomlyChange(self.m)
+        r.m = randomlyChange(r.m)
+        return r
 
     def mate(l1, l2):
         r = Layer(1, 1)
@@ -62,8 +64,9 @@ class Network:
         return input
 
     def mutate(self, sigma, mutationProb):
-        for l in self.layers:
-            l.mutate(sigma, mutationProb)
+        r = Network([0])
+        r.layers = [Layer.mutate(a, sigma, mutationProb) for a in self.layers]
+        return r
 
     def mate(n1, n2):
         r = Network([0])
