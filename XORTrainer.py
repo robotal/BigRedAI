@@ -59,3 +59,7 @@ if __name__ == "__main__":
         geneticXor.nextGeneration()
 
     print(geneticXor.nets[0])
+    print(geneticXor.nets[0].apply(np.array([0, 0])))
+    print(geneticXor.nets[0].apply(np.array([1, 0])))
+    print(geneticXor.nets[0].apply(np.array([0, 1])))
+    print(geneticXor.nets[0].apply(np.array([1, 1])))

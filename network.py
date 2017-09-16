@@ -57,7 +57,7 @@ class Network:
         return r
 
     def __str__(self):
-         return '; '.join([str(l) for l in layers])
+        return '; '.join([str(l) for l in self.layers])
 
     def __repr__(self):
         return str(self)
