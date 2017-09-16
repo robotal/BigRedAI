@@ -48,7 +48,7 @@ class XORTrainer:
 
         for i in range(0, 6):
             netcopy = copy.deepcopy(self.nets[i])
-            netcopy.mutate(.3)
+            netcopy.mutate(.3, .05)
             self.nets.append(netcopy)
 
 
