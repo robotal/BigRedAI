@@ -16,6 +16,9 @@ class Layer:
         # print("Matrix: {}\nInput: {}".format(self.m, input))
         return self.sigmoid(self.m.dot(input))
 
+    def mutate(self, sigma):
+        self.m += np.random.normal(loc = 0.0, scale = sigma, size=self.m.shape)
+
     def __str__(self):
          return "{}".format(self.m)
 
@@ -27,7 +30,7 @@ class Network:
         self.layers = []
         last = layers[0]
         for x in layers[1:]:
-            self.layers += [Layer(last, x)]
+            self.layers.append(Layer(last, x))
             last = x
         # print(self.layers)
         # print()
@@ -37,6 +40,15 @@ class Network:
             input = l.apply(input)
         return input
 
+    def mutate(self, sigma):
+        for l in self.layers:
+            l.mutate(sigma)
+
+
+
 if __name__ == '__main__':
     n = Network([16, 2, 5])
-    print(n.apply(np.random.rand(16)))
+    foo = np.random.rand(16)
+    for i in range(0,10000):
+        print(n.apply(foo))
+        n.mutate(1)
