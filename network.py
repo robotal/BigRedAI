@@ -5,17 +5,19 @@ import numpy as np
 import math
 
 
+def safe_sigmoid(x):
+    try:
+        return 1 / (1 + math.exp(-x))
+    except:
+        return 0
+
 class Layer:
     def __init__(self, in_c, node_c):
         # print("{}, {}".format(in_c, node_c))
         self.m = np.random.rand(node_c, in_c)
         self.m = self.m / self.m.sum(axis=1)[:, None]
         # print("Matrix: {}".format(self.m))
-        def safe_sigmoid(x):
-            try:
-                return 1 / (1 + math.exp(-x))
-            except:
-                return 0
+
         self.sigmoid = np.vectorize(safe_sigmoid)
 
     def apply(self, input):
