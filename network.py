@@ -19,6 +19,11 @@ class Layer:
     def mutate(self, sigma):
         self.m += np.random.normal(loc = 0.0, scale = sigma, size=self.m.shape)
 
+    def mate(l1, l2):
+        r = Layer(1,1)
+        r.m = (l1.m + l2.m) / 2
+        return r
+
     def __str__(self):
          return "{}".format(self.m)
 
@@ -44,7 +49,10 @@ class Network:
         for l in self.layers:
             l.mutate(sigma)
 
-
+    def mate(n1, n2):
+        r = Network([0])
+        r.layers = [Layout.mate(a, b) for a, b in zip(n1.layers, n2.layers)]
+        return r
 
 if __name__ == '__main__':
     n = Network([16, 2, 5])
