@@ -51,12 +51,13 @@ class Network:
 
     def mate(n1, n2):
         r = Network([0])
-        r.layers = [Layout.mate(a, b) for a, b in zip(n1.layers, n2.layers)]
+        r.layers = [Layer.mate(a, b) for a, b in zip(n1.layers, n2.layers)]
         return r
+
 
 if __name__ == '__main__':
     n = Network([16, 2, 5])
     foo = np.random.rand(16)
-    for i in range(0,10000):
+    for i in range(0, 10000):
         print(n.apply(foo))
         n.mutate(1)
