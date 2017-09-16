@@ -11,6 +11,11 @@ class Layer:
         self.m = np.random.rand(node_c, in_c)
         self.m = self.m / self.m.sum(axis=1)[:, None]
         # print("Matrix: {}".format(self.m))
+        def safe_sigmoid(x):
+            try:
+                return 1 / (1 + math.exp(-x))
+            except:
+                return 0
         self.sigmoid = np.vectorize(lambda x: 1 / (1 + math.exp(-x)))
 
     def apply(self, input):
