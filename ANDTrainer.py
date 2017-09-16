@@ -6,7 +6,7 @@ import copy
 from fixed_trainer import FixedTrainer
 
 if __name__ == "__main__":
-    geneticXor = FixedTrainer(8, np.array([[1, 0], [0, 1], [1, 1], [0, 0]]),  np.array([[0], [0], [1], [0]]), [2, 10, 1])
+    geneticXor = FixedTrainer(20, np.array([[1, 0], [0, 1], [1, 1], [0, 0]]),  np.array([[0], [0], [1], [0]]), [2, 10, 1])
 
     for i in range(0, 1000):
         error = geneticXor.nextGeneration(0.3, 0.05)
