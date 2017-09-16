@@ -1,6 +1,4 @@
 from network import Network
-import numpy as np
-import copy
 import itertools
 import multiprocessing as mp
 
