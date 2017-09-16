@@ -5,7 +5,7 @@ import copy
 
 class FixedTrainer:
 
-    def __init__(self, inputs, expected):
+    def __init__(self, inputs, expected, layers):
 
         # create a neural net with 2 inputs, 1 output, and a hidden layer
         # with 2 nodes
@@ -15,7 +15,7 @@ class FixedTrainer:
         self.expected = expected
 
         for i in range(0, 12):
-            self.nets.append(Network([2, 2, 1]))
+            self.nets.append(Network(layers))
 
     def getGeneration(self):
         return self.generation
