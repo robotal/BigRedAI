@@ -1,6 +1,8 @@
 from itertools import cycle
 import random
 import sys
+sys.path.append("..")
+from network import Network
 
 import pygame
 from pygame.locals import *
@@ -13,7 +15,9 @@ SCREENHEIGHT = 512
 PIPEGAPSIZE  = 100 # gap between upper and lower part of pipe
 BASEY        = SCREENHEIGHT * 0.79
 # image, sound and hitmask  dicts
-IMAGES, SOUNDS, HITMASKS = {}, {}, {}
+IMAGES, HITMASKS = {}, {}
+BIRDCOUNT = 10
+BIRDPOP = []
 
 # list of all possible players (tuple of 3 positions of flap)
 PLAYERS_LIST = (
@@ -56,13 +60,32 @@ try:
 except NameError:
     xrange = range
 
+class BirdAI:
 
+    def __init__ (self, myNet=Network([2, 8, 1]), birdType='mutated'):
+        self.neuralNet = myNet
+        self.birdType = birdType
+        self.imageTup = IMAGES['player'][birdType]
+        self.hitmaskTup = HITMASKS['player'][birdType]
+        self.playerIndex = 0;
+        self.playerIndexGen = cycle([0, 1, 2, 1])
+        self.playerx = int(SCREENWIDTH * 0.2)
+        self.playery = int((SCREENHEIGHT - IMAGES['player'][self.birdType][0].get_height()) / 2) + random.uniform(-100,100)
+
+    def drawSprite(self):
+        SCREEN.blit(self.imageTup[self.playerIndex], (self.playerx, self.playery))
+
+    def advanceIndex(self):
+        self.playerIndex = next(self.playerIndexGen)
+
+
+# main training loop
 def main():
     global SCREEN, FPSCLOCK
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
     SCREEN = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
-    pygame.display.set_caption('Flappy Bird')
+    pygame.display.set_caption('Flappy AI')
 
     # numbers sprites for score display
     IMAGES['numbers'] = (
@@ -78,10 +101,6 @@ def main():
         pygame.image.load('assets/sprites/9.png').convert_alpha()
     )
 
-    # game over sprite
-    IMAGES['gameover'] = pygame.image.load('assets/sprites/gameover.png').convert_alpha()
-    # message sprite for welcome screen
-    IMAGES['message'] = pygame.image.load('assets/sprites/message.png').convert_alpha()
     # base (ground) sprite
     IMAGES['base'] = pygame.image.load('assets/sprites/base.png').convert_alpha()
 
@@ -91,71 +110,65 @@ def main():
     else:
         soundExt = '.ogg'
 
-    SOUNDS['die']    = pygame.mixer.Sound('assets/audio/die' + soundExt)
-    SOUNDS['hit']    = pygame.mixer.Sound('assets/audio/hit' + soundExt)
-    SOUNDS['point']  = pygame.mixer.Sound('assets/audio/point' + soundExt)
-    SOUNDS['swoosh'] = pygame.mixer.Sound('assets/audio/swoosh' + soundExt)
-    SOUNDS['wing']   = pygame.mixer.Sound('assets/audio/wing' + soundExt)
+    IMAGES['background'] = pygame.image.load(BACKGROUNDS_LIST[0]).convert()
 
+    # select random pipe sprites
+    pipeindex = 0
+    # upper pipe, lower pipe
+    IMAGES['pipe'] = (
+        pygame.transform.rotate(
+            pygame.image.load(PIPES_LIST[pipeindex]).convert_alpha(), 180),
+        pygame.image.load(PIPES_LIST[pipeindex]).convert_alpha(),
+    )
+
+    # hitmask for pipes
+    HITMASKS['pipe'] = (
+        getHitmask(IMAGES['pipe'][0]),
+        getHitmask(IMAGES['pipe'][1]),
+    )
+
+    # reset player images
+    IMAGES['player'] = {}
+    HITMASKS['player'] = {}
+    bird_types = ['old', 'mated', 'mutated']
+
+    for i in range(0, 3):
+
+        # load all image types for bird types
+        IMAGES['player'][bird_types[i]] = (
+            pygame.image.load(PLAYERS_LIST[i][0]).convert_alpha(),
+            pygame.image.load(PLAYERS_LIST[i][1]).convert_alpha(),
+            pygame.image.load(PLAYERS_LIST[i][2]).convert_alpha(),
+        )
+
+        # load all hitmasks for each bird
+        HITMASKS['player'][bird_types[i]] = (
+            getHitmask(IMAGES['player'][bird_types[i]][0]),
+            getHitmask(IMAGES['player'][bird_types[i]][1]),
+            getHitmask(IMAGES['player'][bird_types[i]][2]))
+
+    for i in range(0, BIRDCOUNT):
+        BIRDPOP.append(BirdAI(birdType='mutated'))
+
+    epoch = 0
+
+    # epoch loop
     while True:
-        # select random background sprites
-        randBg = random.randint(0, len(BACKGROUNDS_LIST) - 1)
-        IMAGES['background'] = pygame.image.load(BACKGROUNDS_LIST[randBg]).convert()
 
-        # select random player sprites
-        randPlayer = random.randint(0, len(PLAYERS_LIST) - 1)
-        IMAGES['player'] = (
-            pygame.image.load(PLAYERS_LIST[randPlayer][0]).convert_alpha(),
-            pygame.image.load(PLAYERS_LIST[randPlayer][1]).convert_alpha(),
-            pygame.image.load(PLAYERS_LIST[randPlayer][2]).convert_alpha(),
-        )
+        # Paint all 10 birds on the screen, wait for user to press enter
+        movementInfo = showWelcomeAnimation(BIRDPOP)
 
-        # select random pipe sprites
-        pipeindex = random.randint(0, len(PIPES_LIST) - 1)
-        IMAGES['pipe'] = (
-            pygame.transform.rotate(
-                pygame.image.load(PIPES_LIST[pipeindex]).convert_alpha(), 180),
-            pygame.image.load(PIPES_LIST[pipeindex]).convert_alpha(),
-        )
-
-        # hismask for pipes
-        HITMASKS['pipe'] = (
-            getHitmask(IMAGES['pipe'][0]),
-            getHitmask(IMAGES['pipe'][1]),
-        )
-
-        # hitmask for player
-        HITMASKS['player'] = (
-            getHitmask(IMAGES['player'][0]),
-            getHitmask(IMAGES['player'][1]),
-            getHitmask(IMAGES['player'][2]),
-        )
-
-        movementInfo = showWelcomeAnimation()
         crashInfo = mainGame(movementInfo)
         showGameOverScreen(crashInfo)
 
 
-def showWelcomeAnimation():
+def showWelcomeAnimation(BIRDPOP):
     """Shows welcome screen animation of flappy bird"""
-    # index of player to blit on screen
-    playerIndex = 0
-    playerIndexGen = cycle([0, 1, 2, 1])
-    # iterator used to change playerIndex after every 5th iteration
-    loopIter = 0
-
-    playerx = int(SCREENWIDTH * 0.2)
-    playery = int((SCREENHEIGHT - IMAGES['player'][0].get_height()) / 2)
-
-    messagex = int((SCREENWIDTH - IMAGES['message'].get_width()) / 2)
-    messagey = int(SCREENHEIGHT * 0.12)
 
     basex = 0
+    loopIter = 0
     # amount by which base can maximum shift to left
     baseShift = IMAGES['base'].get_width() - IMAGES['background'].get_width()
-
-    # player shm for up-down motion on welcome screen
-    playerShmVals = {'val': 0, 'dir': 1}
 
     while True:
         for event in pygame.event.get():
@@ -164,26 +177,32 @@ def showWelcomeAnimation():
                 sys.exit()
             if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
                 # make first flap sound and return values for mainGame
-                SOUNDS['wing'].play()
+                '''
+                    The movement info to return
+                    playery is initial position + current shm (cycles through -8 to 8)
+                    basex is the x pos of player?
+                    playerIndexGen is the current wing flap position
+                '''
                 return {
-                    'playery': playery + playerShmVals['val'],
+                    'playery': playery,
                     'basex': basex,
                     'playerIndexGen': playerIndexGen,
                 }
 
         # adjust playery, playerIndex, basex
         if (loopIter + 1) % 5 == 0:
-            playerIndex = next(playerIndexGen)
+            for bird in BIRDPOP:
+                bird.advanceIndex()
+
         loopIter = (loopIter + 1) % 30
         basex = -((-basex + 4) % baseShift)
-        playerShm(playerShmVals)
 
         # draw sprites
         SCREEN.blit(IMAGES['background'], (0,0))
-        SCREEN.blit(IMAGES['player'][playerIndex],
-                    (playerx, playery + playerShmVals['val']))
-        SCREEN.blit(IMAGES['message'], (messagex, messagey))
         SCREEN.blit(IMAGES['base'], (basex, BASEY))
+
+        for bird in BIRDPOP:
+            bird.drawSprite()
 
         pygame.display.update()
         FPSCLOCK.tick(FPS)
@@ -314,7 +333,7 @@ def mainGame(movementInfo):
         visibleRot = playerRotThr
         if playerRot <= playerRotThr:
             visibleRot = playerRot
-        
+
         playerSurface = pygame.transform.rotate(IMAGES['player'][playerIndex], visibleRot)
         SCREEN.blit(playerSurface, (playerx, playery))
 
@@ -386,11 +405,8 @@ def playerShm(playerShm):
     if abs(playerShm['val']) == 8:
         playerShm['dir'] *= -1
 
-    if playerShm['dir'] == 1:
-         playerShm['val'] += 1
-    else:
-        playerShm['val'] -= 1
 
+    playerShm['val'] += playerShm['dir']
 
 def getRandomPipe():
     """returns a randomly generated pipe"""
