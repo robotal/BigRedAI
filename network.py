@@ -7,7 +7,7 @@ import math
 
 def safe_sigmoid(x):
     try:
-        return 1 / (1 + math.exp(-x))
+        return 2 / (1 + math.exp(-4.9 * x)) - 1
     except:
         return 0
 
