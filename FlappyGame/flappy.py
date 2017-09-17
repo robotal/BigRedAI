@@ -74,7 +74,7 @@ except NameError:
 
 class BirdAI:
 
-    def __init__(self, myNet=Network([2, INNERLAYERS, 1]), birdType='mutated'):
+    def __init__(self, myNet=Network([4, INNERLAYERS, 1]), birdType='mutated'):
         self.neuralNet = myNet
         self.birdType = birdType
         self.imageTup = IMAGES['player'][birdType]
@@ -134,8 +134,8 @@ class BirdAI:
         playerSurface = pygame.transform.rotate(self.imageTup[self.playerIndex], visibleRot)
         SCREEN.blit(playerSurface, (self.playerx, self.playery))
 
-    def checkJump(self, xDiff, yDiff):
-        out = self.neuralNet.apply(numpy.array([xDiff, yDiff]))
+    def checkJump(self, xDiff, yDiff, x2Diff, y2Diff):
+        out = self.neuralNet.apply(numpy.array([xDiff, yDiff, x2Diff, y2Diff]))
 
         if(out[0] > 0):
             self.flapWing()
@@ -366,17 +366,23 @@ def mainGame(movementInfo, BIRDPOP):
             xMidPos = bird.playerx + bird.imageTup[0].get_width() / 2
             yMidPos = bird.playery + bird.imageTup[0].get_height() / 2
 
+            firstPipeFound = False
             # find the first pipe past the bird, calculate distances to the pipe
             for pipe in upperPipes:
                 pipeXMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
                 pipeYMidPos = pipe['y'] + PIPEGAPSIZE / 2
-                if pipeXMidPos + IMAGES['pipe'][0].get_width() / 2 > xMidPos - bird.imageTup[0].get_width() / 2:
+                if pipeXMidPos + IMAGES['pipe'][0].get_width() / 2 > xMidPos - bird.imageTup[0].get_width() / 2 and not firstPipeFound:
                     xDiff = pipeXMidPos - xMidPos
                     yDiff = pipeYMidPos - yMidPos
+                    x2Diff = xDiff
+                    y2Diff = yDiff
+                    firstPipeFound = True
+                elif firstPipeFound:
+                    x2Diff = pipeXMidPos - xMidPos
+                    y2Diff = pipeYMidPos - yMidPos
                     break
-
             # have the bird try to jump
-            bird.checkJump(xDiff, yDiff)
+            bird.checkJump(xDiff, yDiff, x2Diff, y2Diff)
 
         liveBirds = []
         # check for crash here
