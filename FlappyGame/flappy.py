@@ -11,7 +11,7 @@ from pygame.locals import *
 from network import Network
 
 
-FPS = 60
+FPS = 120
 SCREENWIDTH = 288
 SCREENHEIGHT = 512
 # amount by which base can maximum shift to left
@@ -21,6 +21,11 @@ BASEY = SCREENHEIGHT * 0.79
 IMAGES, HITMASKS = {}, {}
 BIRDCOUNT = 30
 BIRDSTOKEEP = 5
+
+SIGMA = .05
+DISASTER = .01
+INNERLAYERS = 5
+
 
 # list of all possible players (tuple of 3 positions of flap)
 PLAYERS_LIST = (
@@ -66,7 +71,7 @@ except NameError:
 
 class BirdAI:
 
-    def __init__(self, myNet=Network([2, 4, 1]), birdType='mutated'):
+    def __init__(self, myNet=Network([2, INNERLAYERS, 1]), birdType='mutated'):
         self.neuralNet = myNet
         self.birdType = birdType
         self.imageTup = IMAGES['player'][birdType]
@@ -254,7 +259,7 @@ def main():
                    for a, b in itertools.combinations(liveBirdsLeft, 2)]
 
         for i in range(0, len(newPop)):
-            newPop.append(BirdAI(myNet=newPop[i].neuralNet.mutate(.3, .03),
+            newPop.append(BirdAI(myNet=newPop[i].neuralNet.mutate(SIGMA, DISASTER),
                                  birdType='mutated'))
 
         BIRDPOP = newPop
