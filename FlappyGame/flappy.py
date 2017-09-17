@@ -26,6 +26,8 @@ SIGMA = .05
 DISASTER = .01
 INNERLAYERS = 5
 
+best_score_ever = 0
+
 
 # list of all possible players (tuple of 3 positions of flap)
 PLAYERS_LIST = (
@@ -160,12 +162,14 @@ class BirdAI:
         return crash
 
     def checkScore(self, upperPipes):
+        global best_score_ever
         playerMidPos = self.playerx + self.imageTup[0].get_width() / 2
         for pipe in upperPipes:
             pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
             if pipeMidPos <= playerMidPos < pipeMidPos + 4:
                 self.fitness += 300
                 self.score += 1
+                best_score_ever = max(self.score, best_score_ever)
 
 
 # main training loop
@@ -244,7 +248,7 @@ def main():
     # epoch loop
     while True:
 
-        print("Epoch: {}".format(epoch))
+        print("Epoch: {}\tBest: {}".format(epoch, best_score_ever))
         # main game will run all of the birds until failure, then
         mainGame(movementInfo, BIRDPOP)
         BIRDPOP = sorted(BIRDPOP, key=lambda bird: -(bird.fitness))
@@ -263,7 +267,7 @@ def main():
                                  birdType='mutated'))
 
         BIRDPOP = newPop
-        print(len(newPop))
+        # print(len(newPop))
         epoch += 1
 
         # Paint all 10 birds on the screen, wait for user to press enter
