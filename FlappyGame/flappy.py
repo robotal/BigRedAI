@@ -11,7 +11,7 @@ from pygame.locals import *
 from network import Network
 
 
-FPS = 120
+FPS = 200
 SCREENWIDTH = 288
 SCREENHEIGHT = 512
 # amount by which base can maximum shift to left
@@ -19,11 +19,12 @@ PIPEGAPSIZE = 100  # gap between upper and lower part of pipe
 BASEY = SCREENHEIGHT * 0.79
 # image, sound and hitmask  dicts
 IMAGES, HITMASKS = {}, {}
-BIRDCOUNT = 30
-BIRDSTOKEEP = 5
+BIRDSTOKEEP = 12
+BIRDCOUNT = 2*BIRDSTOKEEP + BIRDSTOKEEP*(BIRDSTOKEEP-1)
 
-SIGMA = .05
-DISASTER = .01
+
+SIGMA = .03
+DISASTER = .005
 INNERLAYERS = 5
 
 best_score_ever = 0
@@ -267,7 +268,7 @@ def main():
                                  birdType='mutated'))
 
         BIRDPOP = newPop
-        # print(len(newPop))
+        print(len(newPop))
         epoch += 1
 
         # Paint all 10 birds on the screen, wait for user to press enter
