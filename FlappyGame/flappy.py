@@ -11,7 +11,7 @@ from pygame.locals import *
 from network import Network
 
 
-FPS = 30
+FPS = 60
 SCREENWIDTH = 288
 SCREENHEIGHT = 512
 # amount by which base can maximum shift to left
@@ -233,11 +233,11 @@ def main():
 
     epoch = 0
 
+    # Paint all 10 birds on the screen, wait for user to press enter
+    movementInfo = showWelcomeAnimation(BIRDPOP)
+
     # epoch loop
     while True:
-
-        # Paint all 10 birds on the screen, wait for user to press enter
-        movementInfo = showWelcomeAnimation(BIRDPOP)
 
         print("Epoch: {}".format(epoch))
         # main game will run all of the birds until failure, then
@@ -254,15 +254,19 @@ def main():
                    for a, b in itertools.combinations(liveBirdsLeft, 2)]
 
         for i in range(0, len(newPop)):
-            newPop.append(BirdAI(myNet=newPop[i].neuralNet.mutate(.1, .03),
+            newPop.append(BirdAI(myNet=newPop[i].neuralNet.mutate(.3, .03),
                                  birdType='mutated'))
 
         BIRDPOP = newPop
         print(len(newPop))
         epoch += 1
 
+        # Paint all 10 birds on the screen, wait for user to press enter
+        movementInfo = showWelcomeAnimation(BIRDPOP, noSpace=True)
 
-def showWelcomeAnimation(BIRDPOP):
+
+
+def showWelcomeAnimation(BIRDPOP,noSpace=False):
     """Shows welcome screen animation of flappy bird"""
 
     basex = 0
@@ -304,6 +308,11 @@ def showWelcomeAnimation(BIRDPOP):
 
         pygame.display.update()
         FPSCLOCK.tick(FPS)
+
+        if noSpace:
+            return {
+                'basex': basex
+            }
 
 
 def mainGame(movementInfo, BIRDPOP):
